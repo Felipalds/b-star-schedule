@@ -2,9 +2,10 @@ package main
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"os"
-	"strconv"
 )
 
 const MAX_NAME = 30
@@ -13,27 +14,55 @@ const MAX_PHONE = 15
 
 var lastInserted int
 
+/* The data must be capitalize so I can export this */
 type Contact struct {
-	name      string `json:"name"`
-	address   string `json:"address"`
-	phone     string `json:"phone"`
-	isDeleted uint8
+	Name      string `json:"name"`
+	Address   string `json:"address"`
+	Phone     string `json:"phone"`
+	IsDeleted bool   `json:"isDeleted"`
+}
+
+type Contacts struct {
+	contacts []Contact
 }
 
 type Index struct {
-	key      string
-	position int
-	size     int
+	Key      string `json:"key"`
+	Position int    `json:"position"`
 }
 
-func (tree *BTree) createContact() {
+type Indexes struct {
+	indexes []Index
+}
+
+/* I read the data from the JSON file. */
+func (contacts *Contacts) loadContacts() {
+	data, err := ioutil.ReadFile("./data/contacts.json")
+	checkErr(err)
+	err = json.Unmarshal(data, &contacts.contacts)
+	checkErr(err)
+}
+
+func (contacts *Contacts) viewAll() {
+	fmt.Println("[")
+	for i := 0; i < len(contacts.contacts); i++ {
+		fmt.Println("\t{")
+		fmt.Printf("\t\tNAME: %s\n", contacts.contacts[i].Name)
+		fmt.Printf("\t\tADDRESS: %s\n", contacts.contacts[i].Address)
+		fmt.Printf("\t\tPHONE: %s\n", contacts.contacts[i].Phone)
+		fmt.Println("\t}")
+	}
+	fmt.Println("]")
+}
+
+func (contacts *Contacts) createNewContact(tree *BTree, indexes *Indexes) {
 	Clear()
 	fmt.Println("Creating a new contact!")
 	var newContact Contact
 
 	scanner := bufio.NewScanner(os.Stdin)
 
-	// previous varnames to validade before create
+	// Previous varnames to validade before create
 	var pName string
 	var pAddress string
 	var pPhone string
@@ -50,7 +79,7 @@ func (tree *BTree) createContact() {
 	scanner.Scan()
 	pPhone = scanner.Text()
 
-	// VALIDATORS
+	// Data validators
 	if len(pName) > MAX_NAME {
 		pName = pName[:MAX_NAME]
 	}
@@ -63,138 +92,42 @@ func (tree *BTree) createContact() {
 		pPhone = pPhone[:MAX_PHONE]
 	}
 
-	newContact.name = pName
-	newContact.address = pAddress
-	newContact.phone = pPhone
-	newContact.isDeleted = 2
+	newContact.Name = pName
+	newContact.Address = pAddress
+	newContact.Phone = pPhone
+	newContact.IsDeleted = false
+	contacts.contacts = append(contacts.contacts, newContact)
+	newPosition := len(contacts.contacts)
+	var newIndex Index
+	newIndex.Key = newContact.Name
+	newIndex.Position = newPosition
 
-	newIndex := insertContactInFile(newContact)
-	var newIndexSolid Index
-	newIndexSolid.key = newIndex.key
-	newIndexSolid.position = newIndex.position
-	newIndexSolid.size = newIndex.size
-	tree.Insert(DataType(newIndexSolid))
-	insertIndexInFile(newIndex)
+	tree.Insert(DataType(newIndex))
+	indexes.indexes = append(indexes.indexes, newIndex)
 }
 
-func insertContactInFile(contact Contact) *Index {
-	f, _error := os.OpenFile("./data/contacts.data", os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
-	checkErr(_error)
-	defer f.Close()
-	var index Index
-	nameBytes, _ := f.WriteString(contact.name)
-	pipe1, _ := f.WriteString("|")
-	addressBytes, _ := f.WriteString(contact.address)
-	pipe2, _ := f.WriteString("|")
-	phoneBytes, _ := f.WriteString(contact.phone)
-	pipe3, _ := f.WriteString("|")
-	isDeletedBytes, _ := f.Write([]byte(string(contact.isDeleted)))
-	totalBytes := nameBytes + addressBytes + phoneBytes + isDeletedBytes + pipe1 + pipe2 + pipe3
-	Clear()
-
-	index.size = totalBytes
-	index.position = lastInserted
-	index.key = contact.name
-
-	lastInserted += totalBytes
-	fmt.Printf("Contact created with %d bytes at %d position.\n", index.size, index.position)
-
-	return &index
-}
-
-func insertIndexInFile(index *Index) {
-	f, _error := os.OpenFile("./data/index.data", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600)
-	checkErr(_error)
-	defer f.Close()
-
-	// Write index data in file, separated by |
-	f.WriteString(index.key + "\n")
-	f.WriteString(fmt.Sprint(index.position) + "\n")
-	f.WriteString(fmt.Sprint(index.size) + "\n")
-}
-
-func getContactsFromFile(pos int, length int) {
-	data, err := os.Open("./data/contacts.data")
+func (contacts *Contacts) bulkWrite() {
+	updatedContacts, err := json.MarshalIndent(contacts.contacts, "", "	")
 	checkErr(err)
-	byteSlice := make([]byte, length)
-	data.ReadAt(byteSlice, int64(pos))
-	fmt.Println(byteSlice)
-
-	var contact Contact
-
-	charName := []rune{}
-	charAddress := []rune{}
-	charPhone := []rune{}
-
-	i := 0
-	for i = 0; i < length; i++ {
-		if byteSlice[i] == '|' {
-			break
-		}
-
-		charName = append(charName, rune(byteSlice[i]))
-	}
-	i++
-	j := i
-	for j = i; j < length; j++ {
-		if byteSlice[j] == '|' {
-			break
-		}
-
-		charAddress = append(charAddress, rune(byteSlice[j]))
-
-	}
-	j++
-	k := j
-	for k = j; k < length; k++ {
-		if byteSlice[k] == '|' {
-			break
-		}
-		charPhone = append(charPhone, rune(byteSlice[k]))
-
-	}
-	k++
-	contact.isDeleted = byteSlice[k]
-	contact.name = string(charName)
-	contact.address = string(charAddress)
-	contact.phone = string(charPhone)
-
-	fmt.Println(contact.name)
-	fmt.Println(contact.address)
-	fmt.Println(contact.phone)
+	err = ioutil.WriteFile("./data/contacts.json", updatedContacts, 0644)
+	checkErr(err)
 }
 
-func (tree *BTree) loadIndexes() {
-	indexFile, _err := os.Open("./data/index.data")
-	checkErr(_err)
-	fileScanner := bufio.NewScanner(indexFile)
-	var pKey string
-	var pPosition int
-	var pSize int
+func (indexes *Indexes) bulkWrite() {
+	updatedIndexes, err := json.MarshalIndent(indexes.indexes, "", "	")
+	checkErr(err)
+	err = ioutil.WriteFile("./data/index.json", updatedIndexes, 0644)
+	checkErr(err)
+}
 
-	for {
-		var newIndex Index
-		fileScanner.Scan()
+func (indexes *Indexes) loadIndex(tree *BTree) {
+	data, err := ioutil.ReadFile("./data/index.json")
+	checkErr(err)
+	err = json.Unmarshal(data, &indexes.indexes)
 
-		if fileScanner.Text() == "" {
-			break
-		}
-
-		pKey = fileScanner.Text()
-
-		fileScanner.Scan()
-		pPosition, _ = strconv.Atoi(fileScanner.Text())
-
-		fileScanner.Scan()
-		pSize, _ = strconv.Atoi(fileScanner.Text())
-
-		newIndex.key = pKey
-		newIndex.position = pPosition
-		newIndex.size = pSize
-
-		tree.Insert(DataType(newIndex))
+	for i := 0; i < len(indexes.indexes); i++ {
+		tree.Insert(DataType(indexes.indexes[i]))
 	}
-
 }
 
 func main() {
@@ -202,12 +135,12 @@ func main() {
 	// Insert data in a file
 	// Create file index
 
-	fileInfo, err := os.Stat("./data/contacts.data")
-	checkErr(err)
-	lastInserted = int(fileInfo.Size())
-
 	tree := Init()
-	tree.loadIndexes()
+	var contacts Contacts
+	contacts.loadContacts()
+
+	var indexes Indexes
+	indexes.loadIndex(tree)
 
 	for {
 		var choice int
@@ -215,24 +148,43 @@ func main() {
 		fmt.Println("Go Lang Schedule - with B Tree")
 		fmt.Println("==============================")
 		fmt.Println("(1) Create a new contact")
-		fmt.Println("(2) View a contact")
+		fmt.Println("(2) Search a contact")
 		fmt.Println("(3) View all contacts")
+		fmt.Println("(4) View tree of indexes")
+
+		fmt.Println("(0) Exit")
 
 		fmt.Scanf("%d", &choice)
 
 		if choice == 1 {
-			tree.createContact()
+			contacts.createNewContact(tree, &indexes)
 		}
 		if choice == 2 {
-			fmt.Println("View contact")
-			var pos int
-			var length int
-			fmt.Scanf("%d %d", &pos, &length)
-			getContactsFromFile(pos, length)
+			Clear()
+			var name string
+			fmt.Println("Searching for which contact? Type the name:")
+			scanner := bufio.NewScanner(os.Stdin)
+			scanner.Scan()
+			name = scanner.Text()
+			a := tree.Search(name)
+			if a != nil {
+				fmt.Println(contacts.contacts[a.Position])
+			} else {
+				fmt.Println("Contact does not exists")
+			}
 		}
 		if choice == 3 {
 			fmt.Println("View all contacts")
-			tree.root.Print(" ", true)
+			contacts.viewAll()
+		}
+		if choice == 4 {
+			tree.root.Print("", true)
+		}
+		if choice == 0 {
+			fmt.Println("Saving and exiting...")
+			contacts.bulkWrite()
+			indexes.bulkWrite()
+			os.Exit(0)
 		}
 	}
 

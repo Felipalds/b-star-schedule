@@ -118,14 +118,14 @@ func (node *BTreeNode) Insert(key DataType) {
 	if !node.leaf {
 		// Encontra o filho apropriado para inserir a chave
 		i := len(node.keys) - 1
-		for i >= 0 && key.key < node.keys[i].key {
+		for i >= 0 && key.Key < node.keys[i].Key {
 			i--
 		}
 
 		// Insere a chave no filho apropriado
 		if len(node.children[i+1].keys) == 2*t-1 {
 			node.splitChild(int16(i) + 1)
-			if key.key > node.keys[i+1].key {
+			if key.Key > node.keys[i+1].Key {
 				i++
 			}
 		}
@@ -134,7 +134,7 @@ func (node *BTreeNode) Insert(key DataType) {
 		// Insere a chave no nó folha
 		i := len(node.keys) - 1
 		node.keys = append(node.keys, DataType(INDEX_NIL))
-		for i >= 0 && key.key < node.keys[i].key {
+		for i >= 0 && key.Key < node.keys[i].Key {
 			node.keys[i+1] = node.keys[i]
 			i--
 		}
@@ -159,13 +159,13 @@ func (tree *BTree) Insert(key DataType) {
 }
 
 // Busca de uma chave na árvore B
-func (node *BTreeNode) Search(key DataType) *DataType {
+func (node *BTreeNode) Search(key string) *DataType {
 	i := 0
-	for i < len(node.keys) && key.key > node.keys[i].key {
+	for i < len(node.keys) && key > node.keys[i].Key {
 		i++
 	}
 
-	if i < len(node.keys) && key == node.keys[i] {
+	if i < len(node.keys) && key == node.keys[i].Key {
 		return &node.keys[i]
 	} else if node.leaf {
 		return nil
@@ -175,6 +175,6 @@ func (node *BTreeNode) Search(key DataType) *DataType {
 }
 
 // Busca de uma chave na árvore B
-func (tree *BTree) Search(key DataType) *DataType {
+func (tree *BTree) Search(key string) *DataType {
 	return tree.root.Search(key)
 }

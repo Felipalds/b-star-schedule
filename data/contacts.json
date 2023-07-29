@@ -1,0 +1,20 @@
+[
+	{
+		"name": "John Doe",
+		"address": "123-456-7890",
+		"phone": "123 Main St",
+		"isDeleted": false
+	},
+	{
+		"name": "Jane Smith",
+		"address": "987-654-3210",
+		"phone": "456 Elm St",
+		"isDeleted": false
+	},
+	{
+		"name": "Augusto Bareala",
+		"address": "asdfasdf",
+		"phone": "asdfasdf",
+		"isDeleted": false
+	}
+]
