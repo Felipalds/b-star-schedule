@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"strconv"
 )
 
 const MAX_NAME = 30
@@ -13,9 +14,9 @@ const MAX_PHONE = 15
 var lastInserted int
 
 type Contact struct {
-	name      string
-	address   string
-	phone     string
+	name      string `json:"name"`
+	address   string `json:"address"`
+	phone     string `json:"phone"`
 	isDeleted uint8
 }
 
@@ -73,7 +74,7 @@ func (tree *BTree) createContact() {
 	newIndexSolid.position = newIndex.position
 	newIndexSolid.size = newIndex.size
 	tree.Insert(DataType(newIndexSolid))
-
+	insertIndexInFile(newIndex)
 }
 
 func insertContactInFile(contact Contact) *Index {
@@ -101,7 +102,18 @@ func insertContactInFile(contact Contact) *Index {
 	return &index
 }
 
-func getFromFile(pos int, length int) {
+func insertIndexInFile(index *Index) {
+	f, _error := os.OpenFile("./data/index.data", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600)
+	checkErr(_error)
+	defer f.Close()
+
+	// Write index data in file, separated by |
+	f.WriteString(index.key + "\n")
+	f.WriteString(fmt.Sprint(index.position) + "\n")
+	f.WriteString(fmt.Sprint(index.size) + "\n")
+}
+
+func getContactsFromFile(pos int, length int) {
 	data, err := os.Open("./data/contacts.data")
 	checkErr(err)
 	byteSlice := make([]byte, length)
@@ -152,6 +164,39 @@ func getFromFile(pos int, length int) {
 	fmt.Println(contact.phone)
 }
 
+func (tree *BTree) loadIndexes() {
+	indexFile, _err := os.Open("./data/index.data")
+	checkErr(_err)
+	fileScanner := bufio.NewScanner(indexFile)
+	var pKey string
+	var pPosition int
+	var pSize int
+
+	for {
+		var newIndex Index
+		fileScanner.Scan()
+
+		if fileScanner.Text() == "" {
+			break
+		}
+
+		pKey = fileScanner.Text()
+
+		fileScanner.Scan()
+		pPosition, _ = strconv.Atoi(fileScanner.Text())
+
+		fileScanner.Scan()
+		pSize, _ = strconv.Atoi(fileScanner.Text())
+
+		newIndex.key = pKey
+		newIndex.position = pPosition
+		newIndex.size = pSize
+
+		tree.Insert(DataType(newIndex))
+	}
+
+}
+
 func main() {
 	// Create data
 	// Insert data in a file
@@ -162,6 +207,7 @@ func main() {
 	lastInserted = int(fileInfo.Size())
 
 	tree := Init()
+	tree.loadIndexes()
 
 	for {
 		var choice int
@@ -182,7 +228,7 @@ func main() {
 			var pos int
 			var length int
 			fmt.Scanf("%d %d", &pos, &length)
-			getFromFile(pos, length)
+			getContactsFromFile(pos, length)
 		}
 		if choice == 3 {
 			fmt.Println("View all contacts")
