@@ -25,7 +25,7 @@ type Index struct {
 	size     int
 }
 
-func createContact() {
+func (tree *BTree) createContact() {
 	Clear()
 	fmt.Println("Creating a new contact!")
 	var newContact Contact
@@ -61,16 +61,22 @@ func createContact() {
 	if len(pPhone) > MAX_PHONE {
 		pPhone = pPhone[:MAX_PHONE]
 	}
+
 	newContact.name = pName
 	newContact.address = pAddress
 	newContact.phone = pPhone
 	newContact.isDeleted = 2
 
-	insertContactInFile(newContact)
+	newIndex := insertContactInFile(newContact)
+	var newIndexSolid Index
+	newIndexSolid.key = newIndex.key
+	newIndexSolid.position = newIndex.position
+	newIndexSolid.size = newIndex.size
+	tree.Insert(DataType(newIndexSolid))
 
 }
 
-func insertContactInFile(contact Contact) {
+func insertContactInFile(contact Contact) *Index {
 	f, _error := os.OpenFile("./data/contacts.data", os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
 	checkErr(_error)
 	defer f.Close()
@@ -84,11 +90,15 @@ func insertContactInFile(contact Contact) {
 	isDeletedBytes, _ := f.Write([]byte(string(contact.isDeleted)))
 	totalBytes := nameBytes + addressBytes + phoneBytes + isDeletedBytes + pipe1 + pipe2 + pipe3
 	Clear()
+
 	index.size = totalBytes
 	index.position = lastInserted
 	index.key = contact.name
+
 	lastInserted += totalBytes
 	fmt.Printf("Contact created with %d bytes at %d position.\n", index.size, index.position)
+
+	return &index
 }
 
 func getFromFile(pos int, length int) {
@@ -150,6 +160,9 @@ func main() {
 	fileInfo, err := os.Stat("./data/contacts.data")
 	checkErr(err)
 	lastInserted = int(fileInfo.Size())
+
+	tree := Init()
+
 	for {
 		var choice int
 		fmt.Println("==============================")
@@ -157,11 +170,12 @@ func main() {
 		fmt.Println("==============================")
 		fmt.Println("(1) Create a new contact")
 		fmt.Println("(2) View a contact")
+		fmt.Println("(3) View all contacts")
 
 		fmt.Scanf("%d", &choice)
 
 		if choice == 1 {
-			createContact()
+			tree.createContact()
 		}
 		if choice == 2 {
 			fmt.Println("View contact")
@@ -169,6 +183,10 @@ func main() {
 			var length int
 			fmt.Scanf("%d %d", &pos, &length)
 			getFromFile(pos, length)
+		}
+		if choice == 3 {
+			fmt.Println("View all contacts")
+			tree.root.Print(" ", true)
 		}
 	}
 
