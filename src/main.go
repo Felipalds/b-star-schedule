@@ -9,13 +9,13 @@ import (
 const MAX_NAME = 30
 const MAX_ADDRESS = 50
 const MAX_PHONE = 15
+const LENGTH = 99
 
 var lastInserted int
 
 type Index struct {
 	key      string
 	position int
-	size     int
 }
 
 func main() {
@@ -38,7 +38,8 @@ func main() {
 		fmt.Println("(4) View contacts")
 		fmt.Println("(5) Edit a contact")
 		fmt.Println("(6) Remove a contact")
-
+		fmt.Println("(7) Retrieve trash")
+		fmt.Println("(8) Empty trash")
 		fmt.Println("(0) Exit")
 
 		fmt.Scanf("%d", &choice)
@@ -55,7 +56,7 @@ func main() {
 			name = scanner.Text()
 			find := tree.Search(name)
 			if find != nil {
-				contact := getContactFromFile(find.position, find.size)
+				contact := getContactFromFile(find.position)
 				contact.printContact()
 			} else {
 				fmt.Println("Could not find!!!")
@@ -66,8 +67,13 @@ func main() {
 			tree.root.Print(" ", true)
 		}
 		if choice == 4 {
+			Clear()
 			fmt.Println("View all contacts")
-			tree.root.PrintContacts()
+			if len(tree.root.keys) == 0 {
+				fmt.Println("There are no contacts inside.")
+			} else {
+				tree.root.PrintContacts()
+			}
 			Menu()
 		}
 		if choice == 5 {
@@ -79,8 +85,9 @@ func main() {
 			name = scanner.Text()
 			find := tree.Search(name)
 			if find != nil {
-				contact := getContactFromFile(find.position, find.size)
-				newKey := contact.editInfo(find.key, find.position, find.size, tree)
+				contact := getContactFromFile(find.position)
+				contact.removeDolar()
+				newKey := contact.editInfo(find.key, find.position, tree)
 				find.key = newKey
 			} else {
 				fmt.Println("Could not find!")
@@ -95,11 +102,15 @@ func main() {
 			name = scanner.Text()
 			find := tree.Search(name)
 			if find != nil {
-				contact := getContactFromFile(find.position, find.size)
-				contact.delete(find.key, find.position, find.size, tree)
+				contact := getContactFromFile(find.position)
+				contact.delete(find.key, find.position, tree)
 			} else {
 				fmt.Println("Name not found. Contact not deleted.")
 			}
+		}
+		if choice == 7 {
+			Clear()
+			retrieveFromTrash(tree)
 		}
 		if choice == 0 {
 			tree.bulkWrite()

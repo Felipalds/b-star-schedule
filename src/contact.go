@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"strings"
 )
 
 type Contact struct {
@@ -42,49 +43,19 @@ func createContactObject() (*Contact, string) {
 	var keyName string
 	keyName = pName
 
-	if len(pName) < MAX_NAME {
-		s := make([]byte, MAX_NAME)
-		for i := 0; i < len(pName); i++ {
-			s[i] = pName[i]
-		}
-		for i := len(pName); i < MAX_NAME; i++ {
-			s[i] = '$'
-		}
-		pName = string(s)
-	}
-
 	if len(pAddress) > MAX_ADDRESS {
 		pAddress = pAddress[:MAX_ADDRESS]
-	}
-	if len(pAddress) < MAX_ADDRESS {
-		s := make([]byte, MAX_ADDRESS)
-		for i := 0; i < len(pAddress); i++ {
-			s[i] = pAddress[i]
-		}
-		for i := len(pAddress); i < MAX_ADDRESS; i++ {
-			s[i] = '$'
-		}
-		pAddress = string(s)
 	}
 
 	if len(pPhone) > MAX_PHONE {
 		pPhone = pPhone[:MAX_PHONE]
 	}
-	if len(pPhone) < MAX_PHONE {
-		s := make([]byte, MAX_PHONE)
-		for i := 0; i < len(pPhone); i++ {
-			s[i] = pPhone[i]
-		}
-		for i := len(pPhone); i < MAX_PHONE; i++ {
-			s[i] = '$'
-		}
-		pPhone = string(s)
-	}
 
 	newContact.name = pName
 	newContact.address = pAddress
 	newContact.phone = pPhone
-	newContact.isDeleted = 1
+	newContact.insertDolar()
+	newContact.isDeleted = 0
 
 	return &newContact, keyName
 }
@@ -99,24 +70,36 @@ func (tree *BTree) createContact() {
 	var newIndexSolid Index
 	newIndexSolid.key = keyName
 	newIndexSolid.position = newIndex.position
-	newIndexSolid.size = newIndex.size
 	tree.Insert(DataType(newIndexSolid))
 }
 
-func (contact *Contact) editInfo(key string, position int, size int, tree *BTree) string {
+func (contact *Contact) editInfo(key string, position int, tree *BTree) string {
 	newContact, keyName := createContactObject()
-	editContactInFile(*newContact, position, size)
+	editContactInFile(*newContact, position)
 	return keyName
 }
 
-func (contact *Contact) delete(key string, position int, size int, tree *BTree) {
+func (contact *Contact) delete(key string, pos int, tree *BTree) {
 	contact.isDeleted = 1
-	editContactInFile(*contact, position, size)
+	editContactInFile(*contact, pos)
+	tree.root.Delete(key)
+}
+
+func (contact *Contact) retrieve(pos int, tree *BTree) {
+	contact.isDeleted = 0
+	editContactInFile(*contact, pos)
+
+	var index Index
+	contact.removeDolar()
+
+	index.key = contact.name
+	index.position = pos
+	tree.root.Insert(DataType(index))
 }
 
 func getAndPrintContact(index *Index) {
-	Clear()
-	contact := getContactFromFile(index.position, index.size)
+	contact := getContactFromFile(index.position)
+	contact.removeDolar()
 	contact.printContact()
 }
 
@@ -129,27 +112,49 @@ func (contact *Contact) printContact() {
 }
 
 func (contact *Contact) removeDolar() {
-	s := make([]byte, MAX_NAME)
-	for i := 0; i < MAX_NAME; i++ {
-		if contact.name[i] != '$' {
+
+	nonCharCount := strings.Count(contact.name, "$")
+	contact.name = contact.name[:MAX_NAME-nonCharCount]
+
+	nonCharCount = strings.Count(contact.address, "$")
+	contact.address = contact.address[:MAX_ADDRESS-nonCharCount]
+
+	nonCharCount = strings.Count(contact.phone, "$")
+	contact.phone = contact.phone[:MAX_PHONE-nonCharCount]
+}
+
+func (contact *Contact) insertDolar() {
+
+	if len(contact.name) < MAX_NAME {
+		s := make([]byte, MAX_NAME)
+		for i := 0; i < len(contact.name); i++ {
 			s[i] = contact.name[i]
 		}
+		for i := len(contact.name); i < MAX_NAME; i++ {
+			s[i] = '$'
+		}
+		contact.name = string(s)
 	}
-	contact.name = string(s)
 
-	s = make([]byte, MAX_ADDRESS)
-	for i := 0; i < MAX_ADDRESS; i++ {
-		if contact.address[i] != '$' {
+	if len(contact.address) < MAX_ADDRESS {
+		s := make([]byte, MAX_ADDRESS)
+		for i := 0; i < len(contact.address); i++ {
 			s[i] = contact.address[i]
 		}
+		for i := len(contact.address); i < MAX_ADDRESS; i++ {
+			s[i] = '$'
+		}
+		contact.address = string(s)
 	}
-	contact.address = string(s)
 
-	s = make([]byte, MAX_PHONE)
-	for i := 0; i < MAX_PHONE; i++ {
-		if contact.phone[i] != '$' {
+	if len(contact.phone) < MAX_PHONE {
+		s := make([]byte, MAX_PHONE)
+		for i := 0; i < len(contact.phone); i++ {
 			s[i] = contact.phone[i]
 		}
+		for i := len(contact.phone); i < MAX_PHONE; i++ {
+			s[i] = '$'
+		}
+		contact.phone = string(s)
 	}
-	contact.phone = string(s)
 }

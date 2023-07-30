@@ -86,7 +86,7 @@ func (node *BTreeNode) Print(indent string, last bool) {
  * Impressão da árvore B em forma de árvore de diretório *
  *********************************************************/
 func (node *BTreeNode) PrintContacts() {
-	for i, _ := range node.keys {
+	for i := range node.keys {
 		index := Index(node.keys[i])
 		getAndPrintContact(&index)
 	}
@@ -204,4 +204,46 @@ func (node *BTreeNode) Search(key string) *DataType {
 // Busca de uma chave na árvore B
 func (tree *BTree) Search(key string) *DataType {
 	return tree.root.Search(key)
+}
+
+func (root *BTreeNode) Delete(key string) {
+	if root == nil {
+		return
+	}
+
+	deleteKey(root, key)
+	if len(root.keys) == 0 && !root.leaf {
+		// If the root has no keys and it's not a leaf node, make the first child the new root
+		root = root.children[0]
+	}
+}
+
+func deleteKey(node *BTreeNode, key string) {
+	i := 0
+	for i < len(node.keys) && key > node.keys[i].key {
+		i++
+	}
+
+	if i < len(node.keys) && key == node.keys[i].key {
+		if node.leaf {
+			// If the key is found in a leaf node, remove it
+			node.keys = append(node.keys[:i], node.keys[i+1:]...)
+		} else {
+			// If the key is found in an internal node, replace it with the predecessor and delete the predecessor
+			pred := getPredecessor(node, i)
+			node.keys[i] = pred
+			deleteKey(node.children[i], pred.key)
+		}
+	} else if !node.leaf {
+		// If the key is not found in the current node and it's not a leaf node, recursively delete it from the appropriate child
+		deleteKey(node.children[i], key)
+	}
+}
+
+func getPredecessor(node *BTreeNode, index int) DataType {
+	curr := node.children[index]
+	for !curr.leaf {
+		curr = curr.children[len(curr.children)-1]
+	}
+	return curr.keys[len(curr.keys)-1]
 }
