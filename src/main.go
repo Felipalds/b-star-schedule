@@ -37,7 +37,9 @@ func main() {
 		fmt.Println("(3) View index tree")
 		fmt.Println("(4) View contacts")
 		fmt.Println("(5) Edit a contact")
-		fmt.Println("(6) Exit")
+		fmt.Println("(6) Remove a contact")
+
+		fmt.Println("(0) Exit")
 
 		fmt.Scanf("%d", &choice)
 
@@ -65,7 +67,8 @@ func main() {
 		}
 		if choice == 4 {
 			fmt.Println("View all contacts")
-			tree.root.Print(" ", true)
+			tree.root.PrintContacts()
+			Menu()
 		}
 		if choice == 5 {
 			Clear()
@@ -80,10 +83,25 @@ func main() {
 				newKey := contact.editInfo(find.key, find.position, find.size, tree)
 				find.key = newKey
 			} else {
-				fmt.Println("Could not find!!!")
+				fmt.Println("Could not find!")
 			}
 		}
 		if choice == 6 {
+			Clear()
+			fmt.Println("Which contact would you like to remove? [type the name]")
+			scanner := bufio.NewScanner(os.Stdin)
+			var name string
+			scanner.Scan()
+			name = scanner.Text()
+			find := tree.Search(name)
+			if find != nil {
+				contact := getContactFromFile(find.position, find.size)
+				contact.delete(find.key, find.position, find.size, tree)
+			} else {
+				fmt.Println("Name not found. Contact not deleted.")
+			}
+		}
+		if choice == 0 {
 			tree.bulkWrite()
 			os.Exit(0)
 		}

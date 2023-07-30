@@ -83,6 +83,19 @@ func (node *BTreeNode) Print(indent string, last bool) {
 }
 
 /*********************************************************
+ * Impressão da árvore B em forma de árvore de diretório *
+ *********************************************************/
+func (node *BTreeNode) PrintContacts() {
+	for i, _ := range node.keys {
+		index := Index(node.keys[i])
+		getAndPrintContact(&index)
+	}
+	for _, child := range node.children {
+		child.VisitInOrder()
+	}
+}
+
+/*********************************************************
  * B Tree in order *
  *********************************************************/
 func (node *BTreeNode) VisitInOrder() {

@@ -109,10 +109,23 @@ func (contact *Contact) editInfo(key string, position int, size int, tree *BTree
 	return keyName
 }
 
+func (contact *Contact) delete(key string, position int, size int, tree *BTree) {
+	contact.isDeleted = 1
+	editContactInFile(*contact, position, size)
+}
+
+func getAndPrintContact(index *Index) {
+	Clear()
+	contact := getContactFromFile(index.position, index.size)
+	contact.printContact()
+}
+
 func (contact *Contact) printContact() {
-	fmt.Println("NAME: ", contact.name)
+	fmt.Println("------------------------------------")
+	fmt.Println("NAME:    ", contact.name)
 	fmt.Println("ADDRESS: ", contact.address)
-	fmt.Println("PHONE: ", contact.phone)
+	fmt.Println("PHONE:   ", contact.phone)
+	fmt.Println("------------------------------------")
 }
 
 func (contact *Contact) removeDolar() {

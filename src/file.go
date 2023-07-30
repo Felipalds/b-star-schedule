@@ -44,8 +44,6 @@ func getContactFromFile(pos int, length int) *Contact {
 	checkErr(err)
 	byteSlice := make([]byte, length)
 	data.ReadAt(byteSlice, int64(pos))
-	fmt.Println(byteSlice)
-
 	var contact Contact
 
 	charName := []rune{}
@@ -102,6 +100,7 @@ func editContactInFile(contact Contact, position int, length int) *Index {
 	phoneBytes, _ := f.WriteString(contact.phone)
 	pipe3, _ := f.WriteString("|")
 	isDeletedBytes, _ := f.Write([]byte(string(contact.isDeleted)))
+
 	totalBytes := nameBytes + addressBytes + phoneBytes + isDeletedBytes + pipe1 + pipe2 + pipe3
 	Clear()
 
@@ -140,6 +139,7 @@ func insertContactInFile(contact Contact) *Index {
 }
 
 func insertIndexInFile(index *Index) {
+
 	f, _error := os.OpenFile("../data/index.data", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600)
 	checkErr(_error)
 	defer f.Close()
@@ -151,5 +151,8 @@ func insertIndexInFile(index *Index) {
 }
 
 func (tree *BTree) bulkWrite() {
+	f, _error := os.Create("../data/index.data")
+	checkErr(_error)
+	f.Close()
 	tree.root.VisitInOrder()
 }
