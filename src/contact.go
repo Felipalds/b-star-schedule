@@ -11,7 +11,7 @@ type Contact struct {
 	name      string
 	address   string
 	phone     string
-	isDeleted uint8
+	isDeleted rune
 }
 
 func createContactObject() (*Contact, string) {
@@ -55,7 +55,7 @@ func createContactObject() (*Contact, string) {
 	newContact.address = pAddress
 	newContact.phone = pPhone
 	newContact.insertDolar()
-	newContact.isDeleted = 0
+	newContact.isDeleted = '0'
 
 	return &newContact, keyName
 }
@@ -80,13 +80,13 @@ func (contact *Contact) editInfo(key string, position int, tree *BTree) string {
 }
 
 func (contact *Contact) delete(key string, pos int, tree *BTree) {
-	contact.isDeleted = 1
+	contact.isDeleted = '1'
 	editContactInFile(*contact, pos)
 	tree.root.Delete(key)
 }
 
 func (contact *Contact) retrieve(pos int, tree *BTree) {
-	contact.isDeleted = 0
+	contact.isDeleted = '0'
 	editContactInFile(*contact, pos)
 
 	var index Index

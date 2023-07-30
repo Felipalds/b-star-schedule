@@ -112,6 +112,10 @@ func main() {
 			Clear()
 			retrieveFromTrash(tree)
 		}
+		if choice == 8 {
+			Clear()
+			tree = deleteAndReindex(tree)
+		}
 		if choice == 0 {
 			tree.bulkWrite()
 			os.Exit(0)

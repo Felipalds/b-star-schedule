@@ -73,7 +73,7 @@ func getContactFromFile(pos int) *Contact {
 
 	}
 	k++
-	contact.isDeleted = byteSlice[k]
+	contact.isDeleted = rune(byteSlice[k])
 	contact.name = string(charName)
 	contact.address = string(charAddress)
 	contact.phone = string(charPhone)
@@ -129,6 +129,39 @@ func insertContactInFile(contact Contact) *Index {
 	return &index
 }
 
+func insertContactInSecondaryFile(contact Contact) *Index {
+	f, _error := os.OpenFile("../data/contacts-2.data", os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
+	checkErr(_error)
+	defer f.Close()
+	var index Index
+	f.WriteString(contact.name)
+	f.WriteString("|")
+	f.WriteString(contact.address)
+	f.WriteString("|")
+	f.WriteString(contact.phone)
+	f.WriteString("|")
+	f.Write([]byte(string(contact.isDeleted)))
+	Clear()
+
+	index.position = lastInserted
+	index.key = contact.name
+
+	fmt.Printf("Contact created at %d position.\n", index.position)
+
+	return &index
+}
+
+func insertIndexInSecondFile(index *Index) {
+
+	f, _error := os.OpenFile("../data/index-2.data", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600)
+	checkErr(_error)
+	defer f.Close()
+
+	// Write index data in file, separated by |
+	f.WriteString(index.key + "\n")
+	f.WriteString(fmt.Sprint(index.position) + "\n")
+}
+
 func insertIndexInFile(index *Index) {
 
 	f, _error := os.OpenFile("../data/index.data", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0600)
@@ -151,7 +184,7 @@ func retrieveFromTrash(tree *BTree) {
 	pos := 0
 	for {
 		contact := getContactFromFile(pos)
-		if contact.isDeleted == 1 {
+		if contact.isDeleted == '1' {
 			contact.retrieve(pos, tree)
 		}
 
@@ -161,4 +194,32 @@ func retrieveFromTrash(tree *BTree) {
 			return
 		}
 	}
+}
+
+func deleteAndReindex(tree *BTree) *BTree {
+	tree.bulkWrite()
+	newTree := Init()
+	pos := 0
+	for {
+		contact := getContactFromFile(pos)
+		if contact.isDeleted == '0' {
+			index := insertContactInSecondaryFile(*contact)
+			insertIndexInSecondFile(index)
+
+		}
+
+		pos += LENGTH
+
+		if pos >= lastInserted {
+			break
+		}
+	}
+
+	os.Remove("../data/contacts.data")
+	os.Remove("../data/index.data")
+	os.Rename("../data/index-2.data", "../data/index.data")
+	os.Rename("../data/contacts-2.data", "../data/contacts.data")
+
+	newTree.loadIndexes()
+	return newTree
 }
