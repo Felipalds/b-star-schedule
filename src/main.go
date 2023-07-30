@@ -57,6 +57,7 @@ func main() {
 			find := tree.Search(name)
 			if find != nil {
 				contact := getContactFromFile(find.position)
+				contact.removeDolar()
 				contact.printContact()
 			} else {
 				fmt.Println("Could not find!!!")

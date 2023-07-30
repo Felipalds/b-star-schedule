@@ -129,7 +129,7 @@ func insertContactInFile(contact Contact) *Index {
 	return &index
 }
 
-func insertContactInSecondaryFile(contact Contact) *Index {
+func insertContactInSecondaryFile(contact Contact, secondaryIndex *int) *Index {
 	f, _error := os.OpenFile("../data/contacts-2.data", os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
 	checkErr(_error)
 	defer f.Close()
@@ -143,7 +143,9 @@ func insertContactInSecondaryFile(contact Contact) *Index {
 	f.Write([]byte(string(contact.isDeleted)))
 	Clear()
 
-	index.position = lastInserted
+	contact.removeDolar()
+	index.position = *secondaryIndex
+	*secondaryIndex += int(LENGTH)
 	index.key = contact.name
 
 	fmt.Printf("Contact created at %d position.\n", index.position)
@@ -199,11 +201,12 @@ func retrieveFromTrash(tree *BTree) {
 func deleteAndReindex(tree *BTree) *BTree {
 	tree.bulkWrite()
 	newTree := Init()
+	newFileIndex := 0
 	pos := 0
 	for {
 		contact := getContactFromFile(pos)
 		if contact.isDeleted == '0' {
-			index := insertContactInSecondaryFile(*contact)
+			index := insertContactInSecondaryFile(*contact, &newFileIndex)
 			insertIndexInSecondFile(index)
 
 		}
