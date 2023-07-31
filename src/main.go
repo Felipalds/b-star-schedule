@@ -85,11 +85,16 @@ func main() {
 			scanner.Scan()
 			name = scanner.Text()
 			find := tree.Search(name)
+			var newIndex Index
 			if find != nil {
+				add := find.position
 				contact := getContactFromFile(find.position)
 				contact.removeDolar()
 				newKey := contact.editInfo(find.key, find.position, tree)
-				find.key = newKey
+				tree.root.Delete(find.key)
+				newIndex.key = newKey
+				newIndex.position = add
+				tree.Insert(DataType(newIndex))
 			} else {
 				fmt.Println("Could not find!")
 			}
@@ -116,6 +121,9 @@ func main() {
 		if choice == 8 {
 			Clear()
 			tree = deleteAndReindex(tree)
+			fileInfo, err := os.Stat("../data/contacts.data")
+			checkErr(err)
+			lastInserted = int(fileInfo.Size())
 		}
 		if choice == 0 {
 			tree.bulkWrite()

@@ -70,7 +70,6 @@ func getContactFromFile(pos int) *Contact {
 			break
 		}
 		charPhone = append(charPhone, rune(byteSlice[k]))
-
 	}
 	k++
 	contact.isDeleted = rune(byteSlice[k])
@@ -208,7 +207,6 @@ func deleteAndReindex(tree *BTree) *BTree {
 		if contact.isDeleted == '0' {
 			index := insertContactInSecondaryFile(*contact, &newFileIndex)
 			insertIndexInSecondFile(index)
-
 		}
 
 		pos += LENGTH
