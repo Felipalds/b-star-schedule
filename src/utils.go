@@ -1,6 +1,10 @@
 package main
 
-import "fmt"
+import (
+	"bufio"
+	"fmt"
+	"os"
+)
 
 func checkErr(e error) {
 	if e != nil {
@@ -13,8 +17,8 @@ func Clear() {
 }
 
 func Menu() {
-	var buf string
-	fmt.Println("Digite qual coisa para voltar.")
-	fmt.Scanf("%s", buf)
+	fmt.Println("Aperte enter para voltar.")
+	scanner := bufio.NewScanner(os.Stdin)
+	scanner.Scan()
 	Clear()
 }

@@ -21,7 +21,7 @@ type Index struct {
 }
 
 func main() {
-
+	Clear()
 	check1, err := os.Open("../data/contacts.data")
 	if err != nil {
 		os.Create("../data/contacts.data")
