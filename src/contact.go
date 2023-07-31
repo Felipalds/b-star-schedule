@@ -65,6 +65,13 @@ func (tree *BTree) createContact() {
 	fmt.Println("Creating a new contact!")
 
 	newContact, keyName := createContactObject()
+	if tree.Search(keyName) != nil {
+		Clear()
+		fmt.Println("Name already exists! Create a new one.")
+		Menu()
+		return
+	}
+
 	newIndex := insertContactInFile(*newContact)
 
 	var newIndexSolid Index
