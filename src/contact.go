@@ -24,15 +24,21 @@ func createContactObject() (*Contact, string) {
 	var pAddress string
 	var pPhone string
 
-	fmt.Println("Name (len 30):")
+	fmt.Println("Nome (tamanho 30):")
 	scanner.Scan()
 	pName = scanner.Text()
+	for len(pName) == 0 {
+		fmt.Println("Nome é obrigatório!")
+		fmt.Println("Nome (tamanho 30):")
+		scanner.Scan()
+		pName = scanner.Text()
+	}
 
-	fmt.Println("Address (len 50):")
+	fmt.Println("Endereço (tamanho 50):")
 	scanner.Scan()
 	pAddress = scanner.Text()
 
-	fmt.Println("Phone (len 15):")
+	fmt.Println("Telefone (tamanho 15):")
 	scanner.Scan()
 	pPhone = scanner.Text()
 
@@ -62,7 +68,7 @@ func createContactObject() (*Contact, string) {
 
 func (tree *BTree) createContact() {
 	Clear()
-	fmt.Println("Creating a new contact!")
+	fmt.Println("Criando um novo contato.")
 
 	newContact, keyName := createContactObject()
 	if tree.Search(keyName) != nil {
@@ -112,9 +118,9 @@ func getAndPrintContact(index *Index) {
 
 func (contact *Contact) printContact() {
 	fmt.Println("------------------------------------")
-	fmt.Println("NAME:    ", contact.name)
-	fmt.Println("ADDRESS: ", contact.address)
-	fmt.Println("PHONE:   ", contact.phone)
+	fmt.Println("NOME:       ", contact.name)
+	fmt.Println("ENDEREÇO:   ", contact.address)
+	fmt.Println("TELEFONE:   ", contact.phone)
 	fmt.Println("------------------------------------")
 }
 

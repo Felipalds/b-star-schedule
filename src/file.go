@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"time"
 )
 
 func (tree *BTree) loadIndexes() {
@@ -147,7 +148,7 @@ func insertContactInSecondaryFile(contact Contact, secondaryIndex *int) *Index {
 	*secondaryIndex += int(LENGTH)
 	index.key = contact.name
 
-	fmt.Printf("Contact created at %d position.\n", index.position)
+	fmt.Printf("Contato criado na posição %dB.\n", index.position)
 
 	return &index
 }
@@ -198,6 +199,8 @@ func retrieveFromTrash(tree *BTree) {
 }
 
 func deleteAndReindex(tree *BTree) *BTree {
+	os.Create("../data/contacts-2.data")
+	os.Create("../data/index-2.data")
 	tree.bulkWrite()
 	newTree := Init()
 	newFileIndex := 0
@@ -218,8 +221,10 @@ func deleteAndReindex(tree *BTree) *BTree {
 
 	os.Remove("../data/contacts.data")
 	os.Remove("../data/index.data")
+	time.Sleep(200)
 	os.Rename("../data/index-2.data", "../data/index.data")
 	os.Rename("../data/contacts-2.data", "../data/contacts.data")
+	time.Sleep(200)
 
 	newTree.loadIndexes()
 	return newTree

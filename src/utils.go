@@ -14,7 +14,7 @@ func Clear() {
 
 func Menu() {
 	var buf string
-	fmt.Println("Type anything to get back.")
+	fmt.Println("Digite qual coisa para voltar.")
 	fmt.Scanf("%s", buf)
 	Clear()
 }

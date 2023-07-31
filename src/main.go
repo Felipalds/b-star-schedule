@@ -1,3 +1,5 @@
+/*CRIADO POR: LUIZ FELIPE E PEDRO HENRIQUE ZOZ*/
+
 package main
 
 import (
@@ -20,6 +22,18 @@ type Index struct {
 
 func main() {
 
+	check1, err := os.Open("../data/contacts.data")
+	if err != nil {
+		os.Create("../data/contacts.data")
+	}
+	check1.Close()
+
+	check2, err := os.Open("../data/index.data")
+	if err != nil {
+		os.Create("../data/index.data")
+	}
+	check2.Close()
+
 	fileInfo, err := os.Stat("../data/contacts.data")
 	checkErr(err)
 	lastInserted = int(fileInfo.Size())
@@ -32,15 +46,15 @@ func main() {
 		fmt.Println("==============================")
 		fmt.Println("Go Lang Schedule - with B Tree")
 		fmt.Println("==============================")
-		fmt.Println("(1) Create a new contact")
-		fmt.Println("(2) Search a contact")
-		fmt.Println("(3) View index tree")
-		fmt.Println("(4) View contacts")
-		fmt.Println("(5) Edit a contact")
-		fmt.Println("(6) Remove a contact")
-		fmt.Println("(7) Retrieve trash")
-		fmt.Println("(8) Empty trash")
-		fmt.Println("(0) Exit")
+		fmt.Println("(1) Criar um contato")
+		fmt.Println("(2) Buscar um contato")
+		fmt.Println("(3) Ver a árvore de índices em memória")
+		fmt.Println("(4) View todos os contatos")
+		fmt.Println("(5) Editar um contato")
+		fmt.Println("(6) Remover um contato")
+		fmt.Println("(7) Recuperar contatos da lixeira")
+		fmt.Println("(8) Limpar a lixeira")
+		fmt.Println("(0) Salvar e sair")
 
 		fmt.Scanf("%d", &choice)
 
@@ -60,18 +74,18 @@ func main() {
 				contact.removeDolar()
 				contact.printContact()
 			} else {
-				fmt.Println("Could not find!!!")
+				fmt.Println("Contato não encontrado.")
 			}
 		}
 		if choice == 3 {
-			fmt.Println("View all contacts")
+			fmt.Println("Buscando todos os contatos")
 			tree.root.Print(" ", true)
 		}
 		if choice == 4 {
 			Clear()
-			fmt.Println("View all contacts")
+			fmt.Println("Ver todos os contatos")
 			if len(tree.root.keys) == 0 {
-				fmt.Println("There are no contacts inside.")
+				fmt.Println("Não há contatos para serem exibidos")
 			} else {
 				tree.root.PrintContacts()
 			}
@@ -79,7 +93,7 @@ func main() {
 		}
 		if choice == 5 {
 			Clear()
-			fmt.Println("Which contact would you like to edit? [type the name]")
+			fmt.Println("Qual contato você gostaria de editar? [Digite o nome]")
 			scanner := bufio.NewScanner(os.Stdin)
 			var name string
 			scanner.Scan()
@@ -96,12 +110,12 @@ func main() {
 				newIndex.position = add
 				tree.Insert(DataType(newIndex))
 			} else {
-				fmt.Println("Could not find!")
+				fmt.Println("Não foi possível encontrar.")
 			}
 		}
 		if choice == 6 {
 			Clear()
-			fmt.Println("Which contact would you like to remove? [type the name]")
+			fmt.Println("Qual contato você gostaria de remover? [Digite o nome]")
 			scanner := bufio.NewScanner(os.Stdin)
 			var name string
 			scanner.Scan()
@@ -111,7 +125,7 @@ func main() {
 				contact := getContactFromFile(find.position)
 				contact.delete(find.key, find.position, tree)
 			} else {
-				fmt.Println("Name not found. Contact not deleted.")
+				fmt.Println("Contato não encontrado e não apagado.")
 			}
 		}
 		if choice == 7 {
